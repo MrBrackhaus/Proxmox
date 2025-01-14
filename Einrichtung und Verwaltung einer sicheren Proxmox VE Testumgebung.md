@@ -1,12 +1,47 @@
 ---
-author: "Michael Kurz, Fachinformatiker – Systemintegration" 
-date: "2025-01-14" 
+title: "Einrichtung und Verwaltung einer sicheren Proxmox VE Testumgebung"
+author: "Michael Kurz, Fachinformatiker – Systemintegration"
+date: "2025-01-14"
 version: "2.1"
+description: "Ein umfassender Leitfaden zur Einrichtung und Verwaltung einer sicheren und skalierbaren Proxmox VE Testumgebung mit Best Practices für Storage, Netzwerke und Hochverfügbarkeit."
+categories:
+  - Virtualisierung
+  - Proxmox VE
+  - IT-Sicherheit
+  - Netzwerkkonfiguration
+  - Open Source
+tags:
+  - Proxmox
+  - Virtualisierung
+  - Storage
+  - Clustering
+  - Hochverfügbarkeit
+  - Sicherheit
+  - ZFS
+  - Netzwerkdesign
+license: "GPL-3.0"
+toc: true
+keywords:
+  - Proxmox Virtual Environment
+  - Testumgebung
+  - ZFS
+  - Cluster-Setup
+  - Sicherheit
+  - VLAN
+  - Backup
+language: "de"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: false
+    code_folding: hide
+
 ---
 
 # Einrichtung und Verwaltung einer sicheren Proxmox VE Testumgebung
 
-# **Kapitel 1 – Vorwort**
+# Vorwort**
 
 In der modernen IT-Landschaft sind Anforderungen wie **Agilität**, **Skalierbarkeit** und **Sicherheit** nicht mehr nur „nice to have“ – sie sind essenzielle Bausteine, um wettbewerbsfähig zu bleiben. Daten müssen schnell bereitgestellt, Services on demand erstellt und bei Bedarf wieder abgebaut werden können. Gleichzeitig steigen die Erwartungen hinsichtlich Performance und Ausfallsicherheit. Diese Trends zusammen haben der **Virtualisierung** einen enormen Schub verpasst.
 
@@ -15,9 +50,9 @@ In der modernen IT-Landschaft sind Anforderungen wie **Agilität**, **Skalierbar
 * Sie können **klassische virtuelle Maschinen** betreiben, in denen komplette Betriebssysteme laufen.
 * Sie können **leichtere Container** nutzen, um einzelne Dienste isoliert zu fahren, was Ressourcen schont und Deployments beschleunigt.
 
-Diese Dokumentation – in Form eines **ausführlichen Fachbuchs** – führt Sie Schritt für Schritt durch die Konzeption und den Aufbau einer **Testumgebung** auf Basis von Proxmox VE. Dabei legen wir hohen Wert auf **Sicherheit** und **Best Practices**, damit Sie nicht nur schnell, sondern auch **solide** eine leistungsfähige Umgebung auf die Beine stellen.
+Dieses Fachbuch führt Sie Schritt für Schritt durch die Konzeption und den Aufbau einer **Testumgebung** auf Basis von Proxmox VE. Dabei legen wir hohen Wert auf **Sicherheit** und **Best Practices**, damit Sie nicht nur schnell, sondern auch **solide** eine leistungsfähige Umgebung auf die Beine stellen.
 
-## 1.1 Zielgruppe
+## Zielgruppe
 
 * **Fachinformatiker\*innen für Systemintegration:**\
   Menschen mit grundlegenden IT-Infrastruktur-Kenntnissen, die sich tiefer in Virtualisierung und Cloud-nahe Themen einarbeiten wollen.
@@ -28,7 +63,7 @@ Diese Dokumentation – in Form eines **ausführlichen Fachbuchs** – führt Si
 
 Dabei ist klar: Der Sprung von einer reinen „Testumgebung“ hin zu **produktionsnahen Setups** (hochverfügbare Cluster, verschiedene Standorte etc.) ist fließend – Proxmox VE eignet sich durchaus für beides.
 
-## 1.2 Gründe für Proxmox VE
+## Gründe für Proxmox VE
 
 1. **Vollständige Integration von KVM und LXC**
 
@@ -54,7 +89,7 @@ Dabei ist klar: Der Sprung von einer reinen „Testumgebung“ hin zu **produkti
 
 Gerade in einer **Testumgebung**, in der neue Dienste oder Betriebssysteme erprobt werden sollen, ist Proxmox VE dank seiner übersichtlichen GUI und den integrierten Snapshot-/Backup-Funktionen sehr angenehm zu administrieren.
 
-## 1.3 Aufbau und Umfang dieses Fachbuchs
+## Aufbau und Umfang dieses Fachbuchs
 
 Wir gehen **deutlich über eine Kurzanleitung** hinaus, um Ihnen die wichtigsten Hintergrundinformationen zu liefern. Nach der Lektüre sollten Sie in der Lage sein:
 
@@ -69,9 +104,9 @@ Jedes Kapitel baut dabei **nicht zwingend** auf das vorherige auf, kann aber in 
 
 ***
 
-# **Kapitel 2 – Danksagung**
+## Danksagung**
 
-Eine solche Dokumentation entspringt meist dem **Engagement** und der **Expertise vieler Personen** – sei es in Forenbeiträgen, Blog-Artikeln oder direktem Austausch. Deshalb gebührt mein Dank:
+Ein solches Werk entspringt meist dem **Engagement** und der **Expertise vieler Personen**, sei es in Forenbeiträgen, Blog-Artikeln oder direktem Austausch. Deshalb gebührt mein Dank:
 
 1. **Open-Source-Community**\
    Jeder, der/die in Foren, auf GitHub oder in Mailinglisten Beiträge leistet, Code testet oder an Proxmox VE und dessen Ökosystemen (z.B. ZFS on Linux, LXC, Debian) arbeitet. Ohne diese Community wäre eine so umfangreiche Software wie Proxmox kaum möglich.
@@ -87,17 +122,16 @@ Eine solche Dokumentation entspringt meist dem **Engagement** und der **Expertis
 
 ***
 
-## 2.1 Hinweise zur Nutzung dieses Fachbuchs
+## Hinweise zur Nutzung dieses Fachbuchs
 
 * **Markdown-Form:** Dieser Text liegt in Markdown vor. Kopieren Sie ihn in Zettlr, VSCode oder einen anderen Markdown-Editor, um bequem zu navigieren, Notizen einzufügen und Abschnitte auszublenden.
 * **Scrollbare Codeblöcke, Beispiel-Befehle:** Achten Sie auf die Hervorhebungen (`**fett**`, `*kursiv*`, `bash code`), die Ihnen helfen, Befehle direkt zu übernehmen.
-* **Screenshots**: In einem reinen Markdown-Dokument sind keine eingebetteten Bilder vorhanden, aber wir empfehlen (wo möglich) eigene Screenshots der Proxmox-GUI zu ergänzen.
 
 > **Tipp**: Führen Sie parallel eine **Testinstallation** durch. Lesen Sie das jeweilige Kapitel, setzen Sie die Schritte um und notieren Sie eigene Erkenntnisse in den Kommentaren oder internen Dokumenten.
 
 ***
 
-## 2.2 Warum wir uns besonders auf Sicherheit und Best Practices fokussieren
+## Warum wir uns besonders auf Sicherheit und Best Practices fokussieren
 
 1. **Virtualisierung als kritische Infrastruktur**
 
@@ -117,13 +151,13 @@ Eine solche Dokumentation entspringt meist dem **Engagement** und der **Expertis
 
 ***
 
-# **Kapitel 3 – Voraussetzungen**
+# **Kapitel 1 – Voraussetzungen**
 
 In vielen Anleitungen wird der Bereich „Voraussetzungen“ nur kurz abgehandelt – jedoch liegt gerade hier der Schlüssel zum Erfolg. Wenn bereits **Hardware** und **Netzwerk** richtig durchdacht sind, spart man sich später viel Frust. Ebenso spielt die **Planung** (z.B. Speicherplatz, Ausfallsicherheit, Updates) eine wichtige Rolle. Dieses Kapitel ist deshalb umfangreicher, um Ihnen alle nötigen Hintergrundinfos zu geben.
 
-## 3.1 Hardware-Anforderungen
+## 1.1 Hardware-Anforderungen
 
-### 3.1.1 Prozessor (CPU)
+### 1.1.1 Prozessor (CPU)
 
 * **Empfohlen**: x86\_64-Prozessor mit aktivierten Virtualisierungsfunktionen wie Intel VT-x oder AMD-V.
 
@@ -137,7 +171,7 @@ In vielen Anleitungen wird der Bereich „Voraussetzungen“ nur kurz abgehandel
   * Intel Xeon E5/E3, neuere AMD EPYC oder Ryzen-Systeme funktionieren in der Regel sehr gut.
   * Achten Sie auch auf den **Stromverbrauch**; in einer Testumgebung kann ein energieeffizienter Prozessor genügen, sofern man keine Hochleistungsserver simulieren muss.
 
-### 3.1.2 Arbeitsspeicher (RAM)
+### 1.1.2 Arbeitsspeicher (RAM)
 
 * **Minimum**: 16 GB RAM
 
@@ -151,9 +185,9 @@ In vielen Anleitungen wird der Bereich „Voraussetzungen“ nur kurz abgehandel
 
 * **Profi-Hinweis**:
 
-  * ECC-RAM (Error-Correcting Code) kann Defekte frühzeitig entdecken. Gerade bei ZFS oder produktionsnahen Setups empfehlenswert, weil Speicherfehler sonst die Datenintegrität beeinträchtigen könnten.
+  * OD/ECC-RAM (On-Die/Error-Correcting Code) kann Defekte frühzeitig entdecken. Gerade bei ZFS oder produktionsnahen Setups empfehlenswert, weil Speicherfehler sonst die Datenintegrität beeinträchtigen könnten.
 
-### 3.1.3 Speicher (Disks)
+### 1.1.3 Speicher (Disks)
 
 * **Systemlaufwerk**: Idealerweise eine SSD oder NVMe für das Proxmox-Betriebssystem.
 
@@ -165,10 +199,10 @@ In vielen Anleitungen wird der Bereich „Voraussetzungen“ nur kurz abgehandel
 
 * **Wichtige Überlegung**:
 
-  * Möchten Sie in einer Testumgebung viele große VMs fahren (z.B. Windows-VMs mit 100 GB Disk each)? Dann sollten Sie an ausreichend Kapazität und ggf. **Redundanz** denken.
+  * Möchten Sie in einer Testumgebung viele große VMs fahren (z.B. Windows-VMs mit jeweils 100+ GB Disk)? Dann sollten Sie an ausreichend Kapazität und ggf. **Redundanz** denken.
   * Lese-/Schreib-Performance ist bei Virtualisierung ausschlaggebend für ein „flüssiges“ Gefühl in den VMs.
 
-### 3.1.4 Netzwerkadapter
+### 1.1.4 Netzwerkadapter
 
 * **Mindestens**: 1 Gbit/s pro Node – realistisch aber mehr, wenn Cluster und Storage-Verkehr zusammenlaufen.
 
@@ -179,74 +213,74 @@ In vielen Anleitungen wird der Bereich „Voraussetzungen“ nur kurz abgehandel
   1. Knoten-Kommunikation (Corosync, HA Heartbeat, Live Migration) erfordert stabilen, **verlustarmen** Durchsatz.
   2. In produktionsnahen Test-Szenarien wird häufig VLAN-Trennung (Management, Storage, DMZ) angewendet. Mehr physische Ports oder trunk-fähige Switches erleichtern das Setup.
 
-### 3.1.5 USV (Optionale Empfehlung)
+### 1.1.5 USV (Optionale Empfehlung)
 
 * Für einen Testlabors ist es kein Muss, dennoch kann eine **USV** (Unterbrechungsfreie Stromversorgung) plötzliche Spannungsausfälle abfangen. Gerade **ZFS** reagiert empfindlich auf harte Stromausfälle, da Schreibvorgänge unvollständig sein könnten.
 * Wer z.B. Hochverfügbarkeit testet, sollte zudem einen abgesicherten Switch haben, sonst bleibt der Heartbeat bei Stromausfall stehen.
 
 ***
 
-## 3.2 Software-Anforderungen
+## 1.2 Software-Anforderungen
 
-### 3.2.1 Proxmox VE ISO
+### 1.2.1 Proxmox VE ISO
 
 * **Download**: Von [Proxmox.com](https://www.proxmox.com/en/downloads), aktuellste Version (z.B. Proxmox VE 7.x oder neuer).
 * **Checksum**: Prüfen Sie den SHA256-Hash, damit keine korrupte ISO verwendet wird.
 
-### 3.2.2 Debian-Kenntnisse
+### 1.2.2 Debian-Kenntnisse
 
 * Proxmox VE basiert auf **Debian**. Ein **Basiswissen** in apt-Paketverwaltung, Netzwerk-CLI (ip/ifconfig), systemd-Diensten kann enorm helfen.
 * Auch ein generelles Verständnis von Linux-Dateisystemstruktur (/etc, /var/log, etc.) erspart viele Kopfschmerzen.
 
-### 3.2.3 Bootfähiger USB-Stick
+### 1.2.3 Bootfähiger USB-Stick
 
 * Mindestens 8 GB Kapazität.
 * Tools: **Rufus** (Windows) oder **balenaEtcher** (Linux/macOS).
 * Achten Sie auf **UEFI** vs. Legacy-BIOS-Einstellungen (manche USB-Sticks booten nur, wenn Secure Boot ausgeschaltet ist).
 
-### 3.2.4 Enterprise vs. Community Repository
+### 1.2.4 Enterprise vs. Community Repository
 
 * **Enterprise-Repo**: Stabilere, getestete Updates, benötigt Proxmox-Subscription (kostenpflichtig).
 * **Community-Repo**: Kostenfrei, sehr aktuell, jedoch potenziell weniger gründlich getestete Paketstände. Für Testumgebungen typischerweise ausreichend.
 
 > **Extratipp**: Gerade anfangs kann man das Community-Repo nutzen. Sollte die Umgebung später produktiv werden, kann man eine Subscription erwerben und auf Enterprise-Repos umstellen.
 
-### 3.2.5 Zeit- und DNS-Dienste
+### 1.2.5 Zeit- und DNS-Dienste
 
 * **NTP**: Ungenaue Systemzeiten führen schnell zu Token-/SSL-Fehlern oder Cluster-Desynchronisierung.
 * **DNS**: Korrekte Forward- und Reverse-Lookups (pve01.example.local → 192.168.1.x, etc.) sind essenziell für Clustereinrichtung, Live Migration und HA.
 
 ***
 
-## 3.3 Netzwerk-Anforderungen
+## 1.3 Netzwerk-Anforderungen
 
 Ein gut durchdachtes Netzwerkdesign ist von unschätzbarem Wert. So vermeiden Sie, dass Knoten sich nicht finden oder Heartbeat/Corosync-Links flappen.
 
-### 3.3.1 Lokale Infrastruktur & Switches
+### 1.3.1 Lokale Infrastruktur & Switches
 
 * **VLAN-Unterstützung**: Switches sollten VLAN-Tagging (IEEE 802.1Q) sauber beherrschen, falls Sie Subnetze trennen.
 * **LACP**: Wenn Sie Bonding (802.3ad) planen, muss der Switch LACP-Ports konfigurieren können.
 
-### 3.3.2 IP-Adressierung
+### 1.3.2 IP-Adressierung
 
 * Statisch vs. DHCP:
 
   * _Statisch_: Empfohlen für Management-Schnittstellen, um Ausfälle oder IP-Änderungen zu vermeiden.
   * _DHCP_: Möchte man VMs flexibel hochfahren, kann man DHCP in den Gastsystemen nutzen, jedoch nicht für die Proxmox-Hosts selbst.
 
-### 3.3.3 Firewall / Router
+### 1.3.3 Firewall / Router
 
 * Legen Sie fest, ob Sie eine **Hardware-Firewall** (z.B. pfSense-Box) nutzen oder ob Proxmox-Firewall ausreicht.
 * Wenn Sie in der Testumgebung auch Internet-Anbindung benötigen, sollten Sie klären, wer NAT, Portforwarding und VPN-Zugänge verwaltet.
 
-### 3.3.4 Öffentlicher Zugriff (Optional)
+### 1.3.4 Öffentlicher Zugriff (Optional)
 
 * Für reine Testumgebungen häufig gar nicht notwendig.
 * Falls gewünscht: Achten Sie auf SSL-Zertifikate und Firewalls. Port 8006 (Proxmox-GUI) sollte nur über ein sicheres VPN oder eine dedizierte Firewall-Freigabe erreichbar sein.
 
 ***
 
-## 3.4 Fazit „Voraussetzungen“
+## 1.4 Fazit „Voraussetzungen“
 
 Wer eine **saubere** Proxmox-Testumgebung haben will, kann bereits hier viel falsch machen, indem man z.B.
 
@@ -266,13 +300,13 @@ Wer eine **saubere** Proxmox-Testumgebung haben will, kann bereits hier viel fal
 
 ***
 
-# **Kapitel 4 – Installation von Proxmox VE**
+# **Kapitel 2 – Installation von Proxmox VE**
 
 Nachdem wir nun genau wissen, wie unsere Hardware/Software-Ausstattung aussehen soll, schreiten wir zur **Installation**. Dabei behandeln wir sowohl die ISO-basierte Vorgehensweise als auch ein paar Hintergründe (Partitionierungsoptionen, Post-Install-Schritte).
 
-## 4.1 ISO-Vorbereitung und Boot-Vorgang
+## 2.1 ISO-Vorbereitung und Boot-Vorgang
 
-### 4.1.1 ISO-Download
+### 2.1.1 ISO-Download
 
 1. **Webseite**: [proxmox.com/en/downloads](https://www.proxmox.com/en/downloads)
 
@@ -283,25 +317,174 @@ Nachdem wir nun genau wissen, wie unsere Hardware/Software-Ausstattung aussehen 
    * Öffnen Sie eine Konsole, führen Sie `sha256sum proxmox-ve_*.iso` aus und vergleichen Sie den Wert mit dem auf der Proxmox-Download-Seite angegebenen.
    * Bei Abweichungen ISO neu herunterladen.
 
-### 4.1.2 Bootfähiger USB-Stick
+***
 
-* **Rufus (Windows)**
+### **2.1.2 Erstellen eines bootfähigen USB-Sticks**
 
-  1. USB-Stick (8 GB) anschließen, Rufus starten.
-  2. ISO auswählen, Partitionierungsschema (MBR/UEFI) überprüfen.
-  3. „Start“ klicken, warten bis fertig.
+Ein bootfähiger USB-Stick wird benötigt, um die Proxmox VE ISO auf dem Zielsystem zu installieren. Im Folgenden werden die Schritte für Windows, Linux und macOS beschrieben. Zudem werden wichtige Punkte zur Auswahl von UEFI oder Legacy-Boot erläutert.
 
-* **Etcher (Linux/macOS)**
+***
 
-  1. ISO als Quelle, USB-Stick als Ziel, Schreiben starten.
-  2. Beachten Sie, dass Etcher die Daten auf dem Stick vollständig löscht.
+#### **Vorbereitung:**
 
-* **UEFI vs. Legacy**
+1. **Benötigte Materialien:**
 
-  * Moderne Systeme booten meist **UEFI**. Aktivieren Sie „UEFI-Mode“ ggf. im BIOS.
-  * Secure Boot ggf. deaktivieren, wenn Proxmox in älteren Secure-Boot-Setups nicht signiert ist.
+   * Einen USB-Stick mit mindestens **8 GB Speicherplatz**.
+   * Die Proxmox VE ISO-Datei, die von der [offiziellen Proxmox-Website](https://www.proxmox.com/en/downloads) heruntergeladen wurde.
 
-### 4.1.3 Systemstart vom Stick
+2. **Wichtig:**
+
+   * **Sichern Sie alle Daten auf dem USB-Stick**, da dieser während der Erstellung formatiert wird.
+   * Vergewissern Sie sich, dass Ihr System das richtige Bootverfahren unterstützt (UEFI oder Legacy, siehe unten).
+
+***
+
+#### **Windows: Erstellung mit Rufus**
+
+**Rufus** ist ein weit verbreitetes Tool zur Erstellung bootfähiger USB-Sticks auf Windows-Systemen.
+
+1. **Rufus herunterladen und starten:**
+
+   * [Rufus-Website](https://rufus.ie/) besuchen, die neueste Version herunterladen und ausführen (keine Installation notwendig).
+
+2. **USB-Stick auswählen:**
+
+   * Schließen Sie den USB-Stick an und wählen Sie ihn im Dropdown-Menü unter „Gerät“ aus.
+
+3. **ISO-Datei auswählen:**
+
+   * Klicken Sie auf „Auswählen“ und navigieren Sie zur heruntergeladenen Proxmox VE ISO.
+
+4. **Partitionierungsschema überprüfen:**
+
+   * Wählen Sie das passende Partitionierungsschema:
+
+     * **MBR:** Für ältere Systeme mit BIOS oder Legacy-Boot.
+     * **GPT:** Für moderne Systeme mit UEFI-Boot.
+
+   * Rufus schlägt basierend auf der ISO automatisch ein Schema vor; ändern Sie dies nur, wenn Sie sicher sind.
+
+5. **Dateisystem und Optionen:**
+
+   * Dateisystem: **FAT32** (Standard).
+   * Häkchen bei „Schnellformatierung“ setzen.
+
+6. **Erstellung starten:**
+
+   * Klicken Sie auf „Start“.
+   * Rufus zeigt einen Warnhinweis, dass alle Daten auf dem Stick gelöscht werden. Bestätigen Sie mit „OK“.
+
+7. **Abschluss:**
+
+   * Sobald Rufus meldet, dass der Vorgang abgeschlossen ist, können Sie den USB-Stick sicher entfernen.
+
+***
+
+#### **Linux/macOS: Erstellung mit Etcher**
+
+**Etcher** ist ein einfach zu bedienendes Tool, das unter Linux und macOS gleichermaßen gut funktioniert.
+
+1. **Etcher herunterladen:**
+
+   * Besuchen Sie die [Etcher-Website](https://etcher.balena.io/) und laden Sie die passende Version für Ihr Betriebssystem herunter.
+
+2. **Etcher starten:**
+
+   * Starten Sie Etcher nach der Installation.
+
+3. **ISO-Datei auswählen:**
+
+   * Klicken Sie auf „Flash from file“ und wählen Sie die Proxmox VE ISO-Datei aus.
+
+4. **USB-Stick auswählen:**
+
+   * Schließen Sie den USB-Stick an und klicken Sie auf „Select target“. Wählen Sie den USB-Stick aus der Liste.
+
+5. **Schreibvorgang starten:**
+
+   * Klicken Sie auf „Flash“ und bestätigen Sie ggf. die Administratorrechte.
+   * Hinweis: Etcher löscht alle Daten auf dem Stick.
+
+6. **Abschluss:**
+
+   * Sobald der Vorgang abgeschlossen ist, erhalten Sie eine Bestätigung. Entfernen Sie den USB-Stick sicher.
+
+***
+
+#### **Manuelle Erstellung (Linux/Terminal)**
+
+Falls Sie kein Tool wie Etcher verwenden möchten, können Sie den USB-Stick auch direkt über das Terminal erstellen.
+
+1. **ISO-Datei ermitteln:**
+
+   * Wechseln Sie in das Verzeichnis, in dem sich die ISO befindet (z. B. `cd ~/Downloads`).
+
+2. **USB-Stick identifizieren:**
+
+   * Schließen Sie den USB-Stick an und prüfen Sie, wie er im System erkannt wird:
+     ```bash
+     lsblk
+     ```
+     Notieren Sie den Gerätenamen (z. B. `/dev/sdb`).
+
+3. **ISO auf USB-Stick schreiben:**
+
+   * Verwenden Sie den folgenden Befehl:
+     ```bash
+     sudo dd if=proxmox-ve.iso of=/dev/sdX bs=4M status=progress && sync
+     ```
+     Ersetzen Sie `proxmox-ve.iso` durch den Dateinamen der ISO und `/dev/sdX` durch den Gerätenamen Ihres USB-Sticks.
+   * **Achtung:** Stellen Sie sicher, dass Sie den richtigen Gerätenamen verwenden, um keine anderen Laufwerke zu überschreiben.
+
+4. **Abschluss:**
+
+   * Warten Sie, bis der Vorgang abgeschlossen ist, und entfernen Sie den USB-Stick sicher.
+
+***
+
+#### **UEFI vs. Legacy Boot**
+
+**UEFI und Legacy Boot** sind die beiden häufigsten Bootverfahren. Moderne Systeme unterstützen in der Regel UEFI, während ältere Hardware auf Legacy-Boot angewiesen ist.
+
+1. **UEFI:**
+
+   * Vorteile:
+
+     * Schnellere Bootzeit.
+     * Unterstützung für größere Partitionen und moderne Sicherheitsfunktionen (z. B. Secure Boot).
+
+   * Konfiguration:
+
+     * Aktivieren Sie im BIOS den **UEFI-Mode**.
+     * **Secure Boot:** Proxmox unterstützt Secure Boot nicht immer nativ. Deaktivieren Sie diesen Modus, falls der Bootvorgang fehlschlägt.
+
+2. **Legacy Boot:**
+
+   * Vorteile:
+     * Kompatibilität mit älteren Systemen.
+   * Konfiguration:
+     * Wechseln Sie im BIOS in den **Legacy-Mode** oder aktivieren Sie **CSM (Compatibility Support Module)**.
+
+3. **BIOS/UEFI aufrufen:**
+
+   * Beim Start des Computers die entsprechende Taste drücken (oft **F2**, **DEL**, **ESC** oder **F10**, je nach Hersteller).
+   * Stellen Sie sicher, dass der USB-Stick als primäres Bootmedium eingerichtet ist.
+
+***
+
+#### **Tipps und häufige Probleme:**
+
+* **USB-Stick wird nicht erkannt:**
+  * Stellen Sie sicher, dass der Stick korrekt formatiert wurde und im BIOS als Bootmedium erkannt wird.
+* **Fehlermeldungen bei Rufus oder Etcher:**
+  * Verwenden Sie einen anderen USB-Stick oder Port.
+* **Probleme beim Booten:**
+  * Prüfen Sie die BIOS/UEFI-Einstellungen. Achten Sie insbesondere auf den Boot-Modus (UEFI/Legacy).
+
+Mit einem korrekt erstellten USB-Stick und den richtigen BIOS-Einstellungen sind Sie bereit, die Installation von Proxmox VE zu starten!
+
+
+### 2.1.3 Systemstart vom Stick
 
 1. **Rechner einschalten**, Taste für Bootmenü (F12, F2, DEL – je nach Hersteller) drücken.
 2. **USB-Laufwerk** als Bootmedium auswählen.
@@ -311,40 +494,221 @@ Nachdem wir nun genau wissen, wie unsere Hardware/Software-Ausstattung aussehen 
 
 ***
 
-## 4.2 Installation – Schritt für Schritt
+### **2.1.4 Systemstart von PXE (Preboot Execution Environment)**
+
+Das PXE-Boot-Verfahren ermöglicht es, ein Betriebssystem oder ein Installationsprogramm wie Proxmox VE direkt über das Netzwerk zu laden, ohne ein physisches Medium (z. B. USB-Stick oder CD) zu benötigen. Diese Methode ist besonders nützlich in größeren IT-Umgebungen oder bei Headless-Servern.
+
+***
+
+#### **Was ist PXE?**
+
+**PXE (Preboot Execution Environment)** ist ein Netzwerkprotokoll, das es Computern erlaubt, ein Betriebssystem-Image oder Installationsdateien direkt von einem Server zu laden. Der Boot-Prozess erfolgt in mehreren Schritten:
+
+1. **DHCP-Anfrage:** Der Client (das Zielsystem) fordert eine IP-Adresse und PXE-Informationen vom Netzwerk-DHCP-Server an.
+2. **TFTP-Bootloader:** Der PXE-Server liefert einen Bootloader (z. B. iPXE oder GRUB), der die Steuerung übernimmt.
+3. **Kernel und Initramfs:** Der Bootloader lädt die benötigten Dateien (Kernel, Initramfs) über TFTP oder HTTP.
+4. **Start des Installationsprogramms:** Die Installationsroutine wird gestartet, z. B. die Proxmox VE Installation.
+
+***
+
+#### **Voraussetzungen für PXE-Boot**
+
+1. **Netzwerk-Infrastruktur:**
+
+   * Ein DHCP-Server im Netzwerk, der PXE-Boot-Optionen unterstützt.
+   * Ein PXE-Server mit TFTP- und ggf. HTTP/FTP-Unterstützung.
+
+2. **Proxmox VE ISO-Dateien:**
+
+   * Die ISO-Datei muss auf dem PXE-Server bereitgestellt werden.
+   * Extrahieren Sie die Kernel- und Initramfs-Dateien aus der ISO (Anleitung siehe unten).
+
+3. **Client-System:**
+
+   * Unterstützt PXE-Boot im BIOS/UEFI (kann in den Boot-Einstellungen aktiviert werden).
+
+***
+
+#### **PXE-Server einrichten**
+
+Hier ist eine Anleitung zur Einrichtung eines PXE-Servers unter Linux (Debian/Ubuntu).
+
+1. **TFTP-Server installieren:**
+
+   * Installieren Sie einen TFTP-Server:
+     ```bash
+     sudo apt update
+     sudo apt install tftpd-hpa
+     ```
+
+   * Konfigurieren Sie den Server:
+
+     ```bash
+     sudo nano /etc/default/tftpd-hpa
+     ```
+
+     Stellen Sie sicher, dass die Konfiguration wie folgt aussieht:
+
+     ```
+     TFTP_OPTIONS="--secure"
+     TFTP_DIRECTORY="/srv/tftp"
+     RUN_DAEMON="yes"
+     OPTIONS="--secure"
+     ```
+
+   * Erstellen Sie das Verzeichnis für die TFTP-Dateien und starten Sie den Dienst:
+     ```bash
+     sudo mkdir -p /srv/tftp
+     sudo systemctl restart tftpd-hpa
+     ```
+
+2. **DHCP-Server konfigurieren:**
+
+   * Bearbeiten Sie die DHCP-Konfiguration (z. B. für `isc-dhcp-server`):
+
+     ```bash
+     sudo nano /etc/dhcp/dhcpd.conf
+     ```
+
+     Fügen Sie folgende Optionen hinzu:
+
+     ```
+     next-server <IP-Adresse-des-PXE-Servers>;
+     filename "pxelinux.0";
+     ```
+
+   * Starten Sie den DHCP-Server neu:
+     ```bash
+     sudo systemctl restart isc-dhcp-server
+     ```
+
+3. **PXE-Bootloader bereitstellen:**
+
+   * Installieren Sie `syslinux` für den PXE-Bootloader:
+     ```bash
+     sudo apt install syslinux
+     ```
+   * Kopieren Sie die Bootloader-Datei in das TFTP-Verzeichnis:
+     ```bash
+     sudo cp /usr/lib/PXELINUX/pxelinux.0 /srv/tftp/
+     sudo cp -r /usr/lib/syslinux/modules/bios/* /srv/tftp/
+     ```
+
+4. **Proxmox VE Kernel und Initramfs bereitstellen:**
+
+   * Mounten Sie die Proxmox VE ISO:
+     ```bash
+     sudo mount -o loop proxmox-ve.iso /mnt
+     ```
+   * Kopieren Sie die Dateien `vmlinuz` und `initrd.img` aus dem Verzeichnis `/mnt/boot` in das TFTP-Verzeichnis:
+     ```bash
+     sudo cp /mnt/boot/vmlinuz /srv/tftp/
+     sudo cp /mnt/boot/initrd.img /srv/tftp/
+     ```
+
+5. **Boot-Konfigurationsdatei erstellen:**
+
+   * Erstellen Sie eine PXE-Boot-Konfigurationsdatei:
+
+     ```bash
+     sudo nano /srv/tftp/pxelinux.cfg/default
+     ```
+
+     Beispielkonfiguration:
+
+     ```
+     DEFAULT proxmox
+     LABEL proxmox
+         KERNEL vmlinuz
+         APPEND initrd=initrd.img root=/dev/ram0 rw quiet
+     ```
+
+***
+
+#### **PXE-Boot am Client aktivieren**
+
+1. **BIOS/UEFI-Einstellungen:**
+
+   * Rufen Sie das BIOS/UEFI des Zielsystems auf (z. B. durch Drücken von **F2**, **DEL**, oder **F12** beim Start).
+   * Aktivieren Sie die Option **PXE Boot** oder **Network Boot**.
+   * Stellen Sie sicher, dass das Netzwerkgerät als erstes Bootmedium priorisiert ist.
+
+2. **Netzwerkverbindung:**
+
+   * Verbinden Sie das System per Ethernet-Kabel mit dem Netzwerk, in dem der PXE-Server aktiv ist.
+
+3. **PXE-Boot starten:**
+
+   * Beim Start des Systems wird automatisch der PXE-Bootprozess initiiert, sofern korrekt konfiguriert.
+
+***
+
+#### **Tipps und Fehlerbehebung**
+
+* **PXE-Server nicht erreichbar:**
+
+  * Stellen Sie sicher, dass der PXE-Server und der Client im selben Subnetz sind.
+  * Prüfen Sie, ob TFTP- und DHCP-Dienste laufen (`sudo systemctl status tftpd-hpa`).
+
+* **Fehlende Kernel- oder Initramfs-Dateien:**
+
+  * Vergewissern Sie sich, dass die Dateien korrekt kopiert wurden.
+  * Überprüfen Sie die Pfade in der PXE-Konfigurationsdatei.
+
+* **Langsamer Bootprozess:**
+
+  * Verwenden Sie HTTP/FTP statt TFTP, um größere Dateien schneller zu laden.
+
+***
+
+Mit dieser PXE-Einrichtung können Sie Proxmox VE komfortabel und effizient über das Netzwerk auf Ihren Systemen bereitstellen – ideal für Szenarien mit mehreren Systemen oder ohne direkten physischen Zugriff auf die Geräte.
+
+
+## 2.2 Installation – Schritt für Schritt
 
 Die meisten Schritte sind relativ intuitiv, dennoch lohnt sich ein genauer Blick auf Partitionierung und Netzwerkkonfiguration, um spätere Migrationen zu ersparen.
 
 1. **Lizenzvereinbarung**
+![46a0651de75517bfe12d180173971214](https://github.com/user-attachments/assets/7dd241b5-0e64-49fb-be7d-8c569482ce01)
 
    * Proxmox VE steht unter AGPL v3. Kurze Zusammenfassung: Der Quellcode bleibt frei zugänglich, aber man akzeptiert die Lizenzbedingungen.
 
 2. **Ziel-Festplatte**
-
+![962afd9c824d88206a31bde0e433ab72](https://github.com/user-attachments/assets/b4d88dd3-1669-48d6-a81a-4017d2b1e5ea)
    * Im Installer können Sie eine (oder mehrere) Festplatten wählen.
    * Falls Sie **ZFS** als Root-FS bevorzugen, wählen Sie „**ZFS RAID**“.
      * Wählen Sie das RAID-Level (z.B. RAIDZ1 bei 3 Platten) oder Mirror (2 Platten).
+       ![833cc65b91df30141042afda6863f20d](https://github.com/user-attachments/assets/9d0a510f-51a0-4555-b9c7-8fcc8b1f5197)
+  
    * **EXT4 oder LVM** (Standard) geht ebenfalls, ist simpler, aber ohne fortgeschrittene Features (Snapshots, Checksums).
 
 3. **Land/Zeitzone/Tastatur**
 
+![02b2ddf50e5821de7c1e222fa4370adb](https://github.com/user-attachments/assets/93801a6c-f39c-4bf9-9a63-486c3bd57f27)
+
    * Besser direkt korrekt einstellen:
 
      * **Zeitzone** (z.B. Europe/Berlin),
-     * **Keyboard Layout** (de, en, etc.).
+     * **Keyboard Layout** (ger, en, etc.).
 
 4. **Passwort und E-Mail**
+
+![22c6c1261b1bf5043d80bdc52047ddd5](https://github.com/user-attachments/assets/cd2d044c-75da-451a-bc8f-d65aac10216d)
 
    * **Root-Passwort**: Wählen Sie ein sicheres (mind. 12 Zeichen, Kombination aus Buchstaben, Ziffern, Symbolen).
    * **E-Mail**: Dient für Benachrichtigungen (z.B. Backup-Ergebnisse, Cluster-Alerts).
 
 5. **Netzwerkkonfiguration**
 
+![5816ad5f7d3f31b41efc795903ebdf8b](https://github.com/user-attachments/assets/581a1a47-fa14-47d5-afb7-2977e16117f2)
+
    * IP-Adresse, Subnetzmaske, Gateway, DNS eintragen.
    * Hostname = `<nodename.domain.tld>` (z.B. `pve01.lab.local`).
    * **Achtung**: Bei Clustern muss jeder Node eine unique IP und Hostname haben. Keine Duplikate!
 
 6. **Installation**
+
+![02e58a172ac0e0dadab5483ef21105a4](https://github.com/user-attachments/assets/84e3c404-f646-44b1-9cfb-05b7a754c8f1)
 
    * Der Installer formatiert das Zielmedium, legt je nach Auswahl ZFS-Pool oder LVM-Partition an.
    * Dies kann einige Minuten dauern, je nach Geschwindigkeit des Speichermediums.
@@ -355,7 +719,7 @@ Die meisten Schritte sind relativ intuitiv, dennoch lohnt sich ein genauer Blick
 
 ***
 
-## 4.3 Nach dem ersten Boot
+## 2.3 Nach dem ersten Boot
 
 Nach erfolgreichem Hochfahren loggen Sie sich erstmal **Lokal** oder via Weboberfläche ein:
 
@@ -363,9 +727,11 @@ Nach erfolgreichem Hochfahren loggen Sie sich erstmal **Lokal** oder via Webober
   * Da Proxmox VE ein selbstsigniertes Zertifikat erstellt, erhalten Sie meist eine Warnung im Browser; bestätigen und fortfahren.
 * **Login**: `root` + Ihr vergebenes Passwort.
 
+![2cbb0ca870c0a5c458285e58e7c25e12](https://github.com/user-attachments/assets/fbdc694e-6d44-4e20-82ed-5f3c5fe36ed9)
+
 > **Tipp**: Oft ist der Port 8006 blockiert, wenn man die Firewall zu restriktiv eingestellt hat. Prüfen Sie ggf. die Firewall (lokal oder extern).
 
-### 4.3.1 Enterprise vs. Community Repository
+### 2.3.1 Enterprise vs. Community Repository
 
 * Nach dem Login erscheint u.U. ein Hinweis, dass Sie keine Subscription haben, wenn Sie die Enterprise-Repos nutzen wollen. In einer Testumgebung können Sie das ignorieren oder die Repos in /etc/apt/sources.list.d/pve-enterprise.list auskommentieren und das Community-Repo ergänzen:
 
@@ -379,22 +745,115 @@ Nach erfolgreichem Hochfahren loggen Sie sich erstmal **Lokal** oder via Webober
   apt-get update
   ```
 
-### 4.3.2 Erstes Update
+### **2.3.2 Erstes Update**
 
-```bash
-apt-get dist-upgrade -y
-reboot
-```
+Nach der erfolgreichen Installation von Proxmox VE ist es von entscheidender Bedeutung, das System auf den neuesten Stand zu bringen, um Sicherheitslücken zu schließen, die Stabilität zu verbessern und neue Funktionen zu integrieren. Proxmox VE bietet zwei Wege für die Aktualisierung: über die **GUI** und die **CLI**.
 
-* Wichtig, um Kernel- und Sicherheitsupdates einzuspielen. Danach sind Sie auf dem neuesten Stand.
+***
 
-### 4.3.3 Zeitsynchronisierung
+#### **Updates via GUI (empfohlen)**
+
+Die grafische Benutzeroberfläche (GUI) von Proxmox VE bietet eine intuitive Möglichkeit, Updates durchzuführen.
+
+1. **Repository-Überprüfung:**
+
+   * Navigieren Sie zu **Datacenter → Updates**.
+
+   * Vergewissern Sie sich, dass das korrekte Repository verwendet wird:
+
+     * Standardmäßig ist das **Enterprise-Repository** aktiviert. Ohne gültige Subscription sollten Sie zum **Community-Repository** wechseln:
+
+       * Gehen Sie zu **Node → Repositories**.
+
+       * Wählen Sie das Repository `pve-enterprise` aus und deaktivieren Sie es.
+
+       * Fügen Sie das **Community-Repository** hinzu:
+
+         * Klicken Sie auf **Add**.
+         * Wählen Sie `No-Subscription`.
+      ![b740130a3b9c37f6fe0b49a34684cea7](https://github.com/user-attachments/assets/c48f086b-b048-4ef6-b052-4241d3f67cfe)
+         * Klicken Sie auf Add**.
+
+2. **System aktualisieren:**
+
+   * Gehen Sie zu **Node → Updates**.
+   * Klicken Sie auf **Refresh**, um die neuesten Paketlisten zu laden.
+   * Klicken Sie auf **Upgrade**, um verfügbare Updates zu installieren.
+
+3. **System neu starten:**
+
+   * Nach der Installation von Kernel-Updates und anderen sicherheitskritischen Paketen ist ein Neustart erforderlich.
+   * Klicken Sie auf **Node → System → Reboot**, um das System neu zu starten.
+
+***
+
+#### **Updates via CLI**
+
+Für Nutzer, die die Kommandozeile bevorzugen, kann das Update auch direkt über SSH oder die lokale Konsole durchgeführt werden.
+
+1. **SSH-Verbindung herstellen (falls nötig):**
+
+   * Verbinden Sie sich mit dem Server über SSH:
+     ```bash
+     ssh root@<IP-Adresse>
+     ```
+
+2. **Repository-Einstellungen anpassen:**
+
+   * Deaktivieren Sie das Enterprise-Repository (falls keine Subscription vorliegt):
+     ```bash
+     sed -i "s/^deb /#deb /" /etc/apt/sources.list.d/pve-enterprise.list
+     ```
+   * Fügen Sie das Community-Repository hinzu:
+     ```bash
+     echo "deb http://download.proxmox.com/debian/pve bullseye pve-no-subscription" >> /etc/apt/sources.list
+     apt-get update
+     ```
+
+3. **Updates installieren:**
+
+   * Führen Sie das Upgrade durch:
+     ```bash
+     apt-get dist-upgrade -y
+     ```
+   * Dabei werden alle verfügbaren Updates installiert.
+
+4. **Neustart durchführen:**
+
+   * Nach Kernel-Updates ist ein Neustart erforderlich:
+     ```bash
+     reboot
+     ```
+
+***
+
+#### **Wichtige Hinweise**
+
+1. **Regelmäßige Updates:**
+
+   * Aktualisieren Sie Ihr System regelmäßig, um sicherzustellen, dass Sie stets die neuesten Sicherheits-Patches und Bugfixes erhalten.
+   * Planen Sie Updates in Wartungsfenstern ein, insbesondere wenn Downtimes kritisch sind.
+
+2. **Backup vor Updates:**
+
+   * Führen Sie vor größeren Updates ein Backup wichtiger Daten oder VMs durch, um bei Problemen auf einen vorherigen Zustand zurückgreifen zu können.
+
+3. **Überwachung des Update-Prozesses:**
+
+   * Während des Updates zeigt Proxmox in der GUI detaillierte Logs an. Beobachten Sie den Fortschritt und überprüfen Sie, ob alle Pakete erfolgreich aktualisiert wurden.
+
+***
+
+Mit dieser Anleitung stellen Sie sicher, dass Ihre Proxmox VE Installation sicher, stabil und auf dem neuesten Stand bleibt. Der GUI-Ansatz ist besonders nutzerfreundlich und bietet einen schnellen Überblick, während die CLI für Automatisierungen oder detaillierte Kontrolle bevorzugt wird.
+
+
+### 2.3.3 Zeitsynchronisierung
 
 * In der GUI: _Datacenter_ → _Node_ → _System_ → _Time_.
 * Konfigurieren Sie NTP-Server (z.B. pool.ntp.org oder interne Zeitserver).
 * Gerade bei Clustern oder Snapshots können falsche Zeiten zu großen Problemen führen (z.B. abgelehnte Zertifikate, HA-Failover-Fehler).
 
-### 4.3.4 Netzwerkprüfung
+### 2.3.4 Netzwerkprüfung
 
 * _Datacenter_ → _Node_ → _System_ → _Network_:
 
@@ -404,26 +863,26 @@ reboot
 
 ***
 
-## 4.4 Partitionierungs- und Storage-Überlegungen bei der Installation
+## 2.4 Partitionierungs- und Storage-Überlegungen bei der Installation
 
-### 4.4.1 ZFS (Root-FS)
+### 2.4.1 ZFS (Root-FS)
 
 * Wenn Sie beim Installer **ZFS** gewählt haben, existiert nun z.B. ein Pool `rpool`.
 * Vorteil: Snapshots auf Root-Ebene, Checksums, Mirror/RAIDZ.
 * Nachteil: Höherer RAM-Verbrauch, potenziell mehr Konfigurationsaufwand bei Updates.
 
-### 4.4.2 LVM / EXT4
+### 2.4.2 LVM / EXT4
 
 * Das Standardlayout von Proxmox bei „Directory“ + LVM kann ok sein, wenn man nicht zwingend ZFS-Features möchte.
 * Ggf. legen Sie später separate Datenträger für VMs an – z.B. extra SSD, die als LVM-Storage oder ZFS-Pool fungiert.
 
-### 4.4.3 Nachträgliche Änderungen
+### 2.4.3 Nachträgliche Änderungen
 
 * Falls Sie ohne ZFS installiert haben, aber später ZFS möchten, ist meist ein Neuinstall oder manuelles Einbinden eines zweiten Pools nötig. Planung im Vorfeld erspart hier Schmerzen.
 
 ***
 
-## 4.5 Häufige Stolperfallen (Installation)
+## 2.5 Häufige Stolperfallen (Installation)
 
 1. **BIOS vs. UEFI**
 
@@ -452,7 +911,7 @@ reboot
 
 ***
 
-## 4.6 Erste VM / Container als Test
+## 2.6 Erste VM / Container als Test
 
 **Empfehlung**: Sobald das System steht, und Sie die SSH- bzw. WebGUI-Zugänge getestet haben, probieren Sie Folgendes:
 
@@ -479,11 +938,11 @@ reboot
 
 ***
 
-# **Kapitel 5 – Storage-Konfiguration (ZFS, BTRFS, EXT4) und Best Practices**
+# **Kapitel 3 – Storage-Konfiguration (ZFS, BTRFS, EXT4) und Best Practices**
 
 Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **Einrichtung eines leistungsfähigen und verlässlichen Storages** an. Hier treffen wir richtungsweisende Entscheidungen über **Dateisystem**, **RAID-Level** und **Funktionsumfang** (Snapshots, Replikation, Kompression usw.). Je nachdem, wie Ihr zugrunde liegendes Laufwerks-Setup aussieht (einzelne Platten, Hardware-RAID, SSD/NVMe, HDDs), können Sie verschiedene Optionen wählen.
 
-## 5.1 Warum ist der Storage so wichtig?
+## 3.1 Warum ist der Storage so wichtig?
 
 1. **Performance-Auswirkungen**
 
@@ -502,9 +961,9 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
 
 ***
 
-## 5.2 Übersicht der gängigen Dateisysteme
+## 3.2 Übersicht der gängigen Dateisysteme
 
-### 5.2.1 ZFS (Zettabyte File System)
+### 3.2.1 ZFS (Zettabyte File System)
 
 * **Merkmale**:
 
@@ -528,7 +987,7 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
   * Wer **Snapshots** oft und gerne nutzt, auf Checksums und höchste Datenintegrität Wert legt.
   * Wer z.B. Container und VMs in produktionsnaher Qualität betreiben will.
 
-### 5.2.2 BTRFS
+### 3.2.2 BTRFS
 
 * **Merkmale**:
 
@@ -550,7 +1009,7 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
 
   * Gut für Einzelplattensysteme mit Snapshots, wenn man weniger RAM einsetzen will und nicht zwangsläufig RAIDZ-Features braucht.
 
-### 5.2.3 EXT4
+### 3.2.3 EXT4
 
 * **Merkmale**:
 
@@ -574,9 +1033,9 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
 
 ***
 
-## 5.3 ZFS im Detail (Pool-Konzepte, Cache, Snapshots)
+## 3.3 ZFS im Detail (Pool-Konzepte, Cache, Snapshots)
 
-### 5.3.1 Pool-Konzepte und RAID-Level
+### 3.3.1 Pool-Konzepte und RAID-Level
 
 1. **RAID-Z1**: Mit mind. 3 Platten, eine Paritätsplatte. Vergleichbar mit RAID5, ein Plattenausfall ist tolerierbar.
 2. **RAID-Z2**: Mind. 4 Platten, zwei Paritäten. Vergleichbar mit RAID6. Höhere Ausfallsicherheit.
@@ -588,7 +1047,7 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
 > * RAIDZ1 kann bei großen Disks (4 TB+) riskant sein, wenn eine Platte ausfällt und Resilver lange dauert. RAIDZ2 oder Mirror ist sicherer.
 > * Planen Sie immer etwas Kapazitätsreserve ein. ZFS-Pools mit >80–85% Füllgrad verlieren Performance.
 
-### 5.3.2 SLOG (Separate Intent Log) und L2ARC
+### 3.3.2 SLOG (Separate Intent Log) und L2ARC
 
 * **SLOG**:
 
@@ -600,7 +1059,7 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
   * Ein Lesecache auf SSD/NVMe. Häufig gelesene Daten können schneller ausgeliefert werden.
   * Aber: L2ARC selber beansprucht RAM, um Metadaten zu verwalten. Zu große L2ARC kann den Hauptspeicher belasten.
 
-### 5.3.3 Snapshots & Replikation
+### 3.3.3 Snapshots & Replikation
 
 1. **Snapshots**
 
@@ -613,34 +1072,34 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
    * `zfs send poolname/dataset@snap | ssh user@remoteserver "zfs receive remotepoolname/..."`
    * So kann man ganze Dateisysteme oder VMs an einen anderen Host übertragen, ideal für Offsite-Backups oder DR-Szenarien.
 
-### 5.3.4 Deduplication?
+### 3.3.4 Deduplication?
 
 * ZFS unterstützt Deduplizierung, ist aber sehr RAM-intensiv (Hash-Tabellen). In Testumgebungen mit wenig RAM kann das System spürbar ausbremsen.
 * Im Zweifel Kompression aktivieren (lz4, zstd) und Dedup weglassen, außer Sie haben sehr viel RAM und spezielle Anwendungsfälle (viele identische Datenblöcke).
 
 ***
 
-## 5.4 BTRFS: Subvolumes, Snapshots und RAID
+## 3.4 BTRFS: Subvolumes, Snapshots und RAID
 
-### 5.4.1 Subvolumes
+### 3.4.1 Subvolumes
 
 * BTRFS ermöglicht, innerhalb einer Partition mehrere Subvolumes zu erstellen. Jedes Subvolume kann man unabhängig mounten oder einen eigenen Snapshot davon anlegen.
 * Auch Container können pro Subvolume isoliert werden, was Container-Backups oder -Rollbacks erleichtert.
 
-### 5.4.2 RAID-Funktionen
+### 3.4.2 RAID-Funktionen
 
 * RAID0, RAID1, RAID10 gelten als stabil.
 * RAID5/6 gilt als experimentell; es gibt Berichte über instabile Wiederherstellungen bei Disk-Ausfällen.
 * Performance: BTRFS kann solide sein, liegt in Benchmarks aber meist hinter ZFS, vor allem bei größeren Datensätzen und RAID5/6.
 
-### 5.4.3 Integration in Proxmox
+### 3.4.3 Integration in Proxmox
 
 * BTRFS ist nicht der offizielle Standard, aber man kann z.B. ein BTRFS-Dateisystem als Directory-Storage in Proxmox einhängen. Snapshots muss man teils manuell über CLI (`btrfs subvolume snapshot ...`) verwalten.
 * Vorsicht bei LXC, da manche BTRFS-Funktionen in Containern oder Host-BTRFS-Overlay weniger getestet sind.
 
 ***
 
-## 5.5 EXT4: Klassische Stabilität
+## 3.5 EXT4: Klassische Stabilität
 
 * EXT4 ist sehr ausgereift, Tools wie `fsck.ext4` sind verbreitet, Ausfallsicherheit kommt meist aus dem darunterliegenden LVM oder Hardware-RAID.
 * Wer einfach in einer Testumgebung sehr **simpel** starten will, kann EXT4 nehmen und das Thema Snapshots via Proxmox-eigenen Mechanismen (LVM-Thin, Backup-Snapshots) lösen.
@@ -648,9 +1107,9 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
 
 ***
 
-## 5.6 Einrichtung in Proxmox VE (GUI und CLI)
+## 3.6 Einrichtung in Proxmox VE (GUI und CLI)
 
-### 5.6.1 Storage hinzufügen (Allgemein)
+### 3.6.1 Storage hinzufügen (Allgemein)
 
 1. **Proxmox-Weboberfläche** → _Datacenter → Storage → Add_
 
@@ -667,7 +1126,7 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
 
 5. **Speichern**, Proxmox lädt die Config und das Storage taucht in der Liste auf.
 
-### 5.6.2 ZFS-Pool erstellen (GUI)
+### 3.6.2 ZFS-Pool erstellen (GUI)
 
 1. _Datacenter → Node → Disks → ZFS_ (je nach Proxmox-Version kann das Menü etwas variieren).
 
@@ -680,7 +1139,7 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
 
 3. **Bestätigen**: Proxmox initialisiert den Pool. Achtung: vorhandene Daten auf den Disks werden gelöscht.
 
-### 5.6.3 BTRFS oder EXT4 als Directory
+### 3.6.3 BTRFS oder EXT4 als Directory
 
 * Wenn Sie z.B. manuell BTRFS/EXT4 formatieren, mounten Sie diese Partition unter `/mnt/<Verzeichnis>`.
 * Proxmox: _Datacenter → Storage → Add → Directory_, `Directory: /mnt/<Verzeichnis>`, Content: `Disk image`, `Container`, etc.
@@ -688,7 +1147,7 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
 
 ***
 
-## 5.7 Best Practices
+## 3.7 Best Practices
 
 1. **Planen Sie redundante Disks**
 
@@ -712,7 +1171,7 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
 
 ***
 
-## 5.8 Troubleshooting (Storage)
+## 3.8 Troubleshooting (Storage)
 
 1. **Leistungseinbrüche**
 
@@ -736,25 +1195,25 @@ Nachdem Sie Proxmox VE erfolgreich installiert haben, steht als Nächstes die **
 
 ***
 
-## 5.9 Zusammenfassung zu Storage
+## 3.9 Zusammenfassung zu Storage
 
 **Fazit**: Das Dateisystem und die Storage-Struktur sind zentrale Bausteine in Proxmox VE. ZFS bietet den größten Funktionsumfang, benötigt aber entsprechende Hardware-Ressourcen. BTRFS und EXT4 sind Alternativen, wenn man es schlichter halten will oder weniger RAM einsetzen möchte. Unabhängig vom FS gilt: Redundanz, regelmäßige Checks und Backups sind unerlässlich, um Datenverlusten vorzubeugen.
 
 ***
 
-# **Kapitel 6 – Netzwerkkonfiguration**
+# **Kapitel 4 – Netzwerkkonfiguration**
 
 _(Dieser Teil baut auf dem Storage-Kapitel auf. Nun stehen die Grundlagen zur Verfügung, um auch mehrere Knoten und VMs/Container über ein professionelles Netzwerk zu verbinden.)_
 
-## 6.1 Warum Netzwerkkonfiguration so entscheidend ist
+## 4.1 Warum Netzwerkkonfiguration so entscheidend ist
 
 * **Performance**: Wenn Storage und Management über dasselbe Interface laufen, kann es Engpässe geben.
 * **Sicherheit**: Management, VM, Container, DMZ – all das sollte man trennen (via VLAN oder physische Ports).
 * **Clustering**: Corosync-Heartbeat erfordert zuverlässiges, möglichst latenzarmes Netzwerk. Fehlerhafte Switch-Einstellungen (z.B. Spanning Tree Pausen) können HA-Entscheidungen verfälschen.
 
-## 6.2 Bridging in Proxmox VE
+## 4.2 Bridging in Proxmox VE
 
-### 6.2.1 Grundidee
+### 4.2.1 Grundidee
 
 Eine „Bridge“ in Linux/Proxmox agiert wie ein virtueller Switch. Wenn `vmbr0` an `eth0` hängt, können VMs/Container direkt ins physische Netz. IPv4/IPv6-Adressen konfiguriert man meist auf `vmbr0`, nicht mehr auf `eth0`.
 
@@ -767,7 +1226,7 @@ Eine „Bridge“ in Linux/Proxmox agiert wie ein virtueller Switch. Wenn `vmbr0
   3. _Bridge ports:_ z.B. `eth0`.
   4. IP-Config auf die Bridge legen, NIC selbst bleibt häufig ohne IP.
 
-### 6.2.2 VLAN Aware
+### 4.2.2 VLAN Aware
 
 * Aktiviert man „VLAN Aware“ in der Bridge, kann man innerhalb einer VM/Container VLAN-Tags verwenden. So lassen sich z.B. VLAN 10, 20, 30 an einer physischen NIC trunken und in VMs verteilen.
 
@@ -778,9 +1237,9 @@ Eine „Bridge“ in Linux/Proxmox agiert wie ein virtueller Switch. Wenn `vmbr0
 
 ***
 
-## 6.3 Netzwerk-Bonding
+## 4.3 Netzwerk-Bonding
 
-### 6.3.1 Ausfallsicherheit und Bandbreite
+### 4.3.1 Ausfallsicherheit und Bandbreite
 
 **Bonding** (Teaming) fasst mehrere physische Ports zusammen:
 
@@ -797,14 +1256,14 @@ Eine „Bridge“ in Linux/Proxmox agiert wie ein virtueller Switch. Wenn `vmbr0
 
   * Round-Robin-Paketzuteilung. In reinen Test-Setups, wenn Switch kein LACP beherrscht. Kann jedoch bei hohen Lasten ungewollte Reorder-Effekte erzeugen.
 
-### 6.3.2 Umsetzung in der GUI
+### 4.3.2 Umsetzung in der GUI
 
 1. _Datacenter → Node → System → Network_
 2. _Create → Linux Bond_
 3. Bond-Slaves auswählen (z.B. `enp3s0`, `enp4s0`), Modus 802.3ad, miimon=100, etc.
 4. Bond-Device (z.B. `bond0`) per Bridge (vmbr0) sichtbar machen.
 
-### 6.3.3 Switch-Seite
+### 4.3.3 Switch-Seite
 
 * Switch-Port muss auf LACP/Trunk konfiguriert sein, wenn Sie Mode 4 wollen.
 * Jede NIC in denselben LAG-Portchannel. VLAN-Settings passend trunken.
@@ -812,9 +1271,9 @@ Eine „Bridge“ in Linux/Proxmox agiert wie ein virtueller Switch. Wenn `vmbr0
 
 ***
 
-## 6.4 VLAN-Konfiguration
+## 4.4 VLAN-Konfiguration
 
-### 6.4.1 Ziel der VLANs
+### 4.4.1 Ziel der VLANs
 
 * Logische Netzwerksegmentierung, z.B.:
 
@@ -825,7 +1284,7 @@ Eine „Bridge“ in Linux/Proxmox agiert wie ein virtueller Switch. Wenn `vmbr0
 
 So minimieren Sie Broadcast-Overhead, erhöhen Sicherheit (Angreifer auf VM-Netz kann nicht einfach ins Management-Netz).
 
-### 6.4.2 VLAN Aware Bridge vs. Linux VLAN Interface
+### 4.4.2 VLAN Aware Bridge vs. Linux VLAN Interface
 
 1. **VLAN Aware Bridge**
 
@@ -844,15 +1303,15 @@ So minimieren Sie Broadcast-Overhead, erhöhen Sicherheit (Angreifer auf VM-Netz
 
 ***
 
-## 6.5 Firewall-Architektur
+## 4.5 Firewall-Architektur
 
-### 6.5.1 Interne Proxmox-Firewall
+### 4.5.1 Interne Proxmox-Firewall
 
 * Proxmox-eigene Firewall kann auf Datacenter-, Host- oder VM-Ebene Regeln definieren.
 * Globale Policies: Standard-Drop für WAN, nur 22/8006 auf definierte IPs.
 * VM-spezifische Firewalls: z.B. Container darf nur bestimmte Ports inbound akzeptieren.
 
-### 6.5.2 Externe Firewall
+### 4.5.2 Externe Firewall
 
 * Häufig pfSense/OPNsense oder dedizierte Hardware (Cisco, Sophos, Fortinet).
 * Vorteile: Einfache zentrale Regelverwaltung, NAT/VPN an einem Ort.
@@ -860,7 +1319,7 @@ So minimieren Sie Broadcast-Overhead, erhöhen Sicherheit (Angreifer auf VM-Netz
 
 ***
 
-## 6.6 DHCP vs. Statische IPs
+## 4.6 DHCP vs. Statische IPs
 
 * **Statisch**: Sinnvoll für Management-Schnittstellen, da IP-Wechsel ungewünschte Überraschungen provoziert.
 * **DHCP**: Kann man in VMs (Gäste) nutzen, um dynamische Adressen zu vergeben.
@@ -868,7 +1327,7 @@ So minimieren Sie Broadcast-Overhead, erhöhen Sicherheit (Angreifer auf VM-Netz
 
 ***
 
-## 6.7 Netzwerk-Performance und Tuning
+## 4.7 Netzwerk-Performance und Tuning
 
 1. **MTU / Jumbo Frames**
 
@@ -892,7 +1351,7 @@ So minimieren Sie Broadcast-Overhead, erhöhen Sicherheit (Angreifer auf VM-Netz
 
 ***
 
-## 6.8 Typische Stolperfallen (Netzwerk)
+## 4.8 Typische Stolperfallen (Netzwerk)
 
 1. **Bridge/IP-Konfiguration verwechselt**
 
@@ -915,7 +1374,7 @@ So minimieren Sie Broadcast-Overhead, erhöhen Sicherheit (Angreifer auf VM-Netz
 
 ***
 
-## 6.9 Zusammenfassung
+## 4.9 Zusammenfassung
 
 Das Netzwerk bildet das Fundament für Managementzugänge, VM/Container-Traffic und Hochverfügbarkeits-Meldungen. Wer unbedacht an Bonding oder VLANs herangeht, kann schnell stundenlang debugging. Planen Sie Ihr Netzwerk-Layout klar:
 
@@ -926,13 +1385,13 @@ Das Netzwerk bildet das Fundament für Managementzugänge, VM/Container-Traffic 
 
 ***
 
-# **Kapitel 7 – Sicherheitsbest Practices in Proxmox VE**
+# **Kapitel 5 – Sicherheitsbest Practices in Proxmox VE**
 
 Die Sicherheit einer Virtualisierungsplattform wie **Proxmox VE** kann gar nicht hoch genug eingestuft werden. Mit steigender Zahl von virtuellen Maschinen und Services wächst auch das Risikopotenzial – ein einziger kompromittierter Host kann die gesamte virtuelle Infrastruktur gefährden. In diesem Kapitel beleuchten wir **Sicherheitsgrundlagen**, **Härtungsmaßnahmen** und **moderne Tools** wie CrowdSec und Keycloak, um Single Sign-On (SSO) bereitzustellen.
 
-## 7.1 Grundlagen der Sicherheit in Proxmox VE
+## 5.1 Grundlagen der Sicherheit in Proxmox VE
 
-### 7.1.1 Mehrschichtige Absicherung
+### 5.1.1 Mehrschichtige Absicherung
 
 1. **Netzwerkschicht**
 
@@ -959,7 +1418,7 @@ Die Sicherheit einer Virtualisierungsplattform wie **Proxmox VE** kann gar nicht
 
    * Abschließbarer Serverraum, USV, redundante Netzwerkpfade.
 
-### 7.1.2 Proxmox-spezifische Aspekte
+### 5.1.2 Proxmox-spezifische Aspekte
 
 * Proxmox VE setzt auf Debian, also gelten dieselben Linux-Hardening-Prinzipien (z.B. `/etc/sysctl.conf`, SSH, iptables/nftables).
 * Die Web-GUI läuft standardmäßig auf Port 8006, via HTTPS. Sie können diese Zugänge weiter beschränken (z.B. nur erlaubte IP-Bereiche).
@@ -967,9 +1426,9 @@ Die Sicherheit einer Virtualisierungsplattform wie **Proxmox VE** kann gar nicht
 
 ***
 
-## 7.2 Firewall & Netzwerk-Absicherung
+## 5.2 Firewall & Netzwerk-Absicherung
 
-### 7.2.1 Integrierte Proxmox-Firewall
+### 5.2.1 Integrierte Proxmox-Firewall
 
 1. **Aktivierung**
 
@@ -994,7 +1453,7 @@ Die Sicherheit einer Virtualisierungsplattform wie **Proxmox VE** kann gar nicht
 
 > **Hinweis**: Wenn Sie Node-Firewall aktivieren, kann es sein, dass VM-spezifische Firewall-Regeln zusätzlich wirken (verschachtelt). Passen Sie die Reihenfolge an und testen Sie die Erreichbarkeit.
 
-### 7.2.2 Externe Firewall (pfSense, OPNsense, Hardware)
+### 5.2.2 Externe Firewall (pfSense, OPNsense, Hardware)
 
 * **Vor- und Nachteile**
 
@@ -1011,11 +1470,11 @@ Die Sicherheit einer Virtualisierungsplattform wie **Proxmox VE** kann gar nicht
 
 ***
 
-## 7.3 SSH-Härtung
+## 5.3 SSH-Härtung
 
 SSH ist einer der häufigsten Einfallstore, wenn standardmäßiger Port 22 offen ist und schwache Passwörter genutzt werden.
 
-### 7.3.1 Port-Änderung
+### 5.3.1 Port-Änderung
 
 * In `/etc/ssh/sshd_config`:
   ```bash
@@ -1024,7 +1483,7 @@ SSH ist einer der häufigsten Einfallstore, wenn standardmäßiger Port 22 offen
 * `systemctl restart ssh`.
 * Angreifer-Scanner, die nur auf Port 22 zielen, verpuffen. Natürlich kein Allheilmittel – geübte Angreifer scannen alle Ports.
 
-### 7.3.2 Key-basierte Authentifizierung
+### 5.3.2 Key-basierte Authentifizierung
 
 1. **Clientseitig**
 
@@ -1046,42 +1505,42 @@ SSH ist einer der häufigsten Einfallstore, wenn standardmäßiger Port 22 offen
    * Keine Passwörter (außer ggf. Key-Passphrase). Brute-Force extrem erschwert.
    * Kombinierbar mit Fail2Ban oder CrowdSec, um IPs bei Fehlversuchen zu sperren.
 
-### 7.3.3 Root-Login-Einschränkung
+### 5.3.3 Root-Login-Einschränkung
 
 * `PermitRootLogin no`
 
   * Alternativ: `PermitRootLogin without-password` oder `prohibit-password`.
   * Sinnvolle Praxis: Legen Sie einen normalen Benutzer (z.B. `adminuser`) an, geben Sie ihm `sudo`-Zugriff. Root-Login direkt nur im Notfall.
 
-### 7.3.4 Zusätzliche Mechanismen
+### 5.3.4 Zusätzliche Mechanismen
 
 * IP-Restriktionen (z.B. in der Proxmox-Firewall: `Direction: In, Source: 192.168.x.x` only).
 * Tools wie **CrowdSec** (siehe unten) oder **Fail2Ban** sperren IPs nach mehreren Fehlversuchen.
 
 ***
 
-## 7.4 Zwei-Faktor-Authentifizierung (2FA)
+## 5.4 Zwei-Faktor-Authentifizierung (2FA)
 
 Gerade bei GUI-Logins oder per SSH ist **2FA** (Time-based One-Time Password, TOTP) ein wirkungsvolles Mittel gegen Passwortdiebstahl.
 
-### 7.4.1 Aktivierung in Proxmox
+### 5.4.1 Aktivierung in Proxmox
 
 * In der Weboberfläche: _Datacenter → Permissions → Users_, gewünschten User -> _Edit_.
 * Feld „**Two Factor**“ aktivieren, z.B. `TOTP`. Ein QR-Code erscheint, den Sie mit einer Authenticator-App (Authy, Google Authenticator, etc.) scannen.
 * Bei Login: zusätzlich zum Passwort den zeitbasierten Token eingeben.
 
-### 7.4.2 Pflicht für Admin-Accounts
+### 5.4.2 Pflicht für Admin-Accounts
 
 * Insbesondere `root@pam` sollte 2FA nutzen, um unautorisierten Zugang zu erschweren.
 * Achten Sie aber auf Notfallzugänge (Stichwort: Was, wenn Handy/Token weg?). Legen Sie ggf. Backup-Codes an oder haben Sie eine alternative local–Linux-Console-Zugriffsmöglichkeit.
 
 ***
 
-## 7.5 CrowdSec statt Fail2Ban
+## 5.5 CrowdSec
 
-**CrowdSec** geht über das klassische Fail2Ban hinaus, indem es eine **Community-basierte Threat-Sharing-Plattform** bietet. Verdächtige IPs oder Verhaltensmuster werden zentral gesammelt, und Sie können automatisch profitieren, indem Sie globale IP-Blocklisten erhalten.
+**CrowdSec** geht über das klassische Fail2Ban hinaus, indem es eine **Community-basierte Threat-Sharing-Plattform** bietet. Verdächtige IPs oder Verhaltensmuster werden zentral gesammelt, und Sie können automatisch profitieren, indem Sie globale IP-Blocklisten erhalten. Weitere Informationen finden Sie in der offiziellen Dokumentation unter <https://doc.crowdsec.net/>.
 
-### 7.5.1 Installation und Konfiguration
+### 5.5.1 Installation und Konfiguration
 
 ```bash
 curl -s https://packagecloud.io/install/repositories/crowdsec/crowdsec/script.deb.sh | bash
@@ -1092,57 +1551,56 @@ systemctl start crowdsec
 
 * Unter `/etc/crowdsec/` liegen Konfigurationsdateien.
 * Definieren Sie in `/etc/crowdsec/acquis.yaml`, welche Logfiles verfolgt werden (z.B. `/var/log/auth.log`, `/var/log/pve/tasks/*.log`).
+* Für eine einfache Integration in Proxmox kann das Paket `fulljackz/proxmox-bf` verwendet werden, das speziell zur Verbesserung der Brute-Force-Abwehr auf Proxmox-Systemen entwickelt wurde.
 
-### 7.5.2 Funktionsweise
+### 5.5.2 Funktionsweise
 
 * CrowdSec scannt Logs auf wiederholte fehlgeschlagene SSH-Logins, Web-Zugriffe usw.
 * Bei Erkennung bösartiger Patterns (Brute-Force, DDoS, etc.) wird die IP in der lokalen `decisions`-Liste blockiert (via iptables/nftables oder Proxmox-Firewall).
 * Parallel kann CrowdSec mit dem globalen Backend kommunizieren: IPs, die andernorts als malicious erkannt wurden, sperrt es proaktiv.
 
-### 7.5.3 Verwaltung
+### 5.5.3 Verwaltung
 
 * `cscli decisions list` – zeigt blockierte IPs.
 * `cscli decisions delete <ID>` – hebt Bann auf.
 * Integration in Proxmox-Firewall: So bleiben Ban-Regeln konsistent, auch bei Reboots.
 
-***
-
-## 7.6 RBAC (Rollenbasierte Zugriffskontrolle)
+## 5.6 RBAC (Rollenbasierte Zugriffskontrolle)
 
 **RBAC** ermöglicht feingranulare Zugriffsrechte: Nicht jeder darf alles.
 
-### 7.6.1 Prinzip
+### 5.6.1 Prinzip
 
 1. **User**: Kann lokal (`pve`) oder über LDAP/AD/Keycloak angelegt sein.
 2. **Rolle**: Definiert, welche Aktionen erlaubt sind (VM.Allocate, VM.Audit, Datastore.Allocate, etc.).
 3. **Erstellung**: _Datacenter → Permissions → Roles._
 4. **Zuweisung**: _Datacenter → Permissions → Add._ Geben Sie Pfad (`/`, `/vms/100`) an, den User, die Rolle.
 
-### 7.6.2 Beispiel-Szenarien
+### 5.6.2 Beispiel-Szenarien
 
 * **Admin**: Vollzugriff auf alles.
 * **VM-Manager**: Darf neue VMs anlegen, löschen, aber keine Cluster-Einstellungen ändern.
 * **Backup-Operator**: Darf Backup-Jobs starten, Restores durchführen, nicht mehr.
 * **Reine Lese-Rechte**: VM.Audit, Datastore.Audit, aber keine Schreiboperationen.
 
-### 7.6.3 Pflege & Sicherheit
+### 5.6.3 Pflege & Sicherheit
 
 * Entfernen Sie veraltete Konten (Ex-Mitarbeiter etc.).
 * Minimales Prinzip: Geben Sie so wenig Rechte wie möglich. Jemand, der nur Logs checken soll, kriegt nur Audit-Rechte.
 
 ***
 
-## 7.7 Keycloak als SSO-Lösung
+## 5.7 Keycloak als SSO-Lösung
 
 In Test- und auch Produktionsumgebungen kann es angenehm sein, **Single Sign-On** (SSO) via **Keycloak** zu nutzen, anstatt mehrere Authentifizierungsmethoden (lokal, AD, etc.) zu pflegen.
 
-### 7.7.1 Vorteile
+### 5.7.1 Vorteile
 
 1. **Zentrale Identity-Verwaltung**: Keycloak kann AD/LDAP-Anbindung oder Social-Logins.
 2. **2FA**: Keycloak selbst kann OTP/WebAuthn erzwingen, Proxmox muss es nicht gesondert regeln.
 3. **Rollenmapping**: Keycloak-Gruppen → Proxmox-RBAC.
 
-### 7.7.2 Implementierung (Kurzüberblick)
+### 5.7.2 Implementierung (Kurzüberblick)
 
 1. **Keycloak-Server**: z.B. Docker-Container oder separate VM.
 2. **OpenID Connect Plugin** in Proxmox: Community-lösung, die OIDC realisiert.
@@ -1150,7 +1608,7 @@ In Test- und auch Produktionsumgebungen kann es angenehm sein, **Single Sign-On*
 4. **pvesh** (CLI) oder GUI, um OIDC-Auth-Provider hinzufügen.
 5. **Nutzung**: Login-Flow leitet zur Keycloak-Anmeldeseite um, bei Erfolg geht’s zurück in die Proxmox-GUI.
 
-### 7.7.3 Reverse-Proxy-Variante
+### 5.7.3 Reverse-Proxy-Variante
 
 * Alternativ: Setzen Sie z.B. `oauth2-proxy` oder Traefik als Forward-Auth.
 * Proxmox-UI wird hinter einem Gateway angeboten. Wer nicht eingeloggt ist, wird zu Keycloak geleitet.
@@ -1158,33 +1616,33 @@ In Test- und auch Produktionsumgebungen kann es angenehm sein, **Single Sign-On*
 
 ***
 
-## 7.8 Weitere Sicherheitslayer
+## 5.8 Weitere Sicherheitslayer
 
-### 7.8.1 IDS/IPS: Suricata, Snort
+### 5.8.1 IDS/IPS: Suricata, Snort
 
 * Erkennung von Netzwerk-Anomalien, Exploit-Signaturen.
 * Häufig integriert in pfSense/OPNsense.
 * Sinnvoll, wenn Proxmox-Hosts direkter Internetzugang oder exponierte Dienste haben.
 
-### 7.8.2 AppArmor/SELinux
+### 5.8.2 AppArmor/SELinux
 
 * Standardmäßig ist AppArmor auf Debian/Ubuntu-basierten Systemen präsenter, SELinux auf RHEL-basierten.
 * Zusätzliche Sicherheitsprofile für PVE-Dienste, LXC, Qemu.
 * Achtung: Ein fehlerhaftes Profil kann VMs oder Container blockieren. Testen Sie Konfigs sorgfältig.
 
-### 7.8.3 Log-Überwachung (ELK, Graylog)
+### 5.8.3 Log-Überwachung (ELK, Graylog)
 
 * Sammeln Sie Proxmox-Logs, SSH-Logs, Firewall-Ereignisse zentral, z.B. in Elasticsearch + Kibana.
 * So erkennen Sie wiederholte Fehlanmeldungen oder seltsame Systemfehler.
 
-### 7.8.4 Regelmäßige Updates
+### 5.8.4 Regelmäßige Updates
 
 * `apt-get update && apt-get dist-upgrade -y` in regelmäßigen Intervallen (Maintenance-Fenster!).
 * Achtung, Kernel-Updates erfordern Reboot → Planen Sie Downtimes ein oder nutzen Sie Cluster-Live-Migration, um VMs vorher auf andere Nodes zu schieben.
 
 ***
 
-## 7.9 Zusammenfassung
+## 5.9 Zusammenfassung
 
 Eine sichere Proxmox-Umgebung fußt auf mehreren Ebenen:
 
@@ -1198,7 +1656,7 @@ Damit ist das System gut gegen Einbrüche und Fehlbedienungen gerüstet.
 
 ***
 
-# **Kapitel 8 – Clustering und Hochverfügbarkeit (HA)**
+# **Kapitel 6 – Clustering und Hochverfügbarkeit (HA)**
 
 Während in den bisherigen Kapiteln die Basis (Installation, Storage, Netzwerk, Sicherheit) gelegt wurde, widmen wir uns nun dem **Mehrknotenbetrieb** und der **Hochverfügbarkeit** – dem entscheidenden Schritt in Richtung „produktionstaugliche“ Virtualisierungslösung. Ein Proxmox-Cluster ermöglicht:
 
@@ -1206,31 +1664,31 @@ Während in den bisherigen Kapiteln die Basis (Installation, Storage, Netzwerk, 
 2. **Live Migration** von VMs/Containern zwischen Knoten ohne (oder nur minimaler) Downtime.
 3. **HA-Funktionalität**: Im Falle eines Node-Ausfalls können VMs/Container automatisch auf andere Knoten neu gestartet werden.
 
-## 8.1 Cluster-Grundlagen
+## 6.1 Cluster-Grundlagen
 
-### 8.1.1 Corosync & Quorum
+### 6.1.1 Corosync & Quorum
 
 * **Corosync** ist der Messaging-Layer, der Node-Status (Heartbeat) und Cluster-Konfiguration synchron hält.
 * **Quorum** bedeutet, dass mindestens die Hälfte +1 der Knoten (oder ein Quorum-Gerät) aktiv sein muss, damit Cluster-Entscheidungen getroffen werden dürfen (z.B. HA-Failover).
 * Bei **zwei Knoten** ohne QDevice gibt es oft das „Split-Brain“-Problem: Beide glauben, sie seien der „letzte überlebende Knoten“. Deshalb empfiehlt man meist **≥3 Knoten** oder ein **QDevice** (Quorum-Device).
 
-### 8.1.2 Shared Storage oder Replikation
+### 6.1.2 Shared Storage oder Replikation
 
 * Für HA oder Live Migration benötigen VMs/Container ein **freigegebenes Storage**, das von allen Knoten aus erreichbar ist. Typische Varianten:
 
   1. **ZFS über iSCSI/NFS** oder **Ceph** (ein verteiltes Cluster-Dateisystem).
   2. **ZFS-Replikation**: VMs liegen auf lokalem ZFS, werden aber fortlaufend an andere Knoten repliziert. Bei Node-Failover kann man VMs dort aktivieren (etwas längere Downtime als bei echtem Shared Storage).
 
-### 8.1.3 Netzwerk-Tipps
+### 6.1.3 Netzwerk-Tipps
 
 * Minimieren Sie Latenz und Paketverlust. Corosync mag es nicht, wenn Switch-Spanning-Tree Ports verzögert freischaltet oder VLANs instabil sind.
 * Viele setzen ein dediziertes Interface (z.B. Bonding) für Cluster-Traffic (Heartbeat, Storage). So stört VM-Traffic nicht die Corosync-Pakete.
 
 ***
 
-## 8.2 Cluster-Erstellung
+## 6.2 Cluster-Erstellung
 
-### 8.2.1 Erster Knoten („Cluster Master“)
+### 6.2.1 Erster Knoten („Cluster Master“)
 
 1. **Proxmox-Konsole** oder SSH:
 
@@ -1248,7 +1706,7 @@ Während in den bisherigen Kapiteln die Basis (Installation, Storage, Netzwerk, 
 
    * Zeigt Quorum, Node-ID, Ringstatus an.
 
-### 8.2.2 Beitritt weiterer Knoten
+### 6.2.2 Beitritt weiterer Knoten
 
 * Auf dem **zweiten** Node:
 
@@ -1261,20 +1719,20 @@ Während in den bisherigen Kapiteln die Basis (Installation, Storage, Netzwerk, 
 * Alternativ Weboberfläche:
   * _Datacenter → Cluster → Join Cluster_ und die Join-Informationen (Fingerprint, IP, Key) ausfüllen.
 
-### 8.2.3 Zwei Knoten vs. Drei Knoten
+### 6.2.3 Zwei Knoten vs. Drei Knoten
 
 * **Zwei Knoten**: Man kann ein **QDevice** (Quorum-Device) einrichten, um das Split-Brain-Problem zu umgehen (zusätzlicher leichter Linux-Dienst, der als dritter „virtueller Knoten“ fungiert).
 * **Drei (oder mehr) Knoten**: Sauberes Quorum. Häufigste Empfehlung für HA-Umgebungen.
 
 ***
 
-## 8.3 Hochverfügbarkeits-Funktion (HA)
+## 6.3 Hochverfügbarkeits-Funktion (HA)
 
-### 8.3.1 Idee
+### 6.3.1 Idee
 
 * Definieren Sie, welche VMs/Container „HA-Resources“ sein sollen. Fällt der Host-Knoten aus, erkennt das Cluster dies dank Corosync. Der HA-Manager startet die entsprechenden VMs/Container selbsttätig auf einem anderen, noch lebenden Knoten.
 
-### 8.3.2 Voraussetzungen
+### 6.3.2 Voraussetzungen
 
 1. **Gemeinsames Storage**:
 
@@ -1284,7 +1742,7 @@ Während in den bisherigen Kapiteln die Basis (Installation, Storage, Netzwerk, 
 2. **Stable Network**:
    * Ausreichende Corosync-Verbindung, sonst drohen Fehlentscheidungen.
 
-### 8.3.3 Einrichtung
+### 6.3.3 Einrichtung
 
 1. _Datacenter → HA → Groups_:
    * Erstellen Sie ggf. Gruppen (z.B. „prod-nodes“ = Node1, Node2).
@@ -1296,7 +1754,7 @@ Während in den bisherigen Kapiteln die Basis (Installation, Storage, Netzwerk, 
 
 3. Prüfen via _Tasks_, ob Ressource aktiv und dem Cluster bekannt ist.
 
-### 8.3.4 Failover-Vorgang
+### 6.3.4 Failover-Vorgang
 
 * Node stürzt ab oder reagiert nicht mehr → Corosync merkt „Node offline“, Quorum-Check.
 * HA-Manager wartet den „**watchdog-timer**“ ab (60–120 s), um false positives zu vermeiden.
@@ -1306,9 +1764,9 @@ Während in den bisherigen Kapiteln die Basis (Installation, Storage, Netzwerk, 
 
 ***
 
-## 8.4 Live Migration
+## 6.4 Live Migration
 
-### 8.4.1 Was ist Live Migration?
+### 6.4.1 Was ist Live Migration?
 
 * Ein laufendes VM/Container-Gastsystem wird ohne signifikante Downtime vom Node A zu Node B verschoben:
 
@@ -1316,13 +1774,13 @@ Während in den bisherigen Kapiteln die Basis (Installation, Storage, Netzwerk, 
   2. Finaler „Stop-and-copy“ ist sehr kurz (Sekundenbruchteile).
   3. Gast merkt evtl. minimalen Netzwerk-Ping-Verlust.
 
-### 8.4.2 Voraussetzungen
+### 6.4.2 Voraussetzungen
 
 * Gemeinsames Storage mit **Shared Disk Images**.
 * Kompatible CPU-Flags (z.B. KVM64).
 * Netzwerkverbindung mit ausreichendem Durchsatz für den RAM-Transfer.
 
-### 8.4.3 Ablauf
+### 6.4.3 Ablauf
 
 1. WebGUI → VM → Migrate → Zielnode auswählen.
 2. Proxmox zeigt Fortschrittsbalken.
@@ -1330,7 +1788,7 @@ Während in den bisherigen Kapiteln die Basis (Installation, Storage, Netzwerk, 
 
 ***
 
-## 8.5 Georedundanz (Standortübergreifendes Clustering)
+## 6.5 Georedundanz (Standortübergreifendes Clustering)
 
 * Möchten Sie z.B. zwei Rechenzentren verbinden, kann man einen WAN-Cluster bauen.
 * **Achtung**: Corosync reagiert sensibel auf Latenz und Paketverluste. Latenz >10–20 ms kann instabile Cluster-Situationen erzeugen.
@@ -1338,7 +1796,7 @@ Während in den bisherigen Kapiteln die Basis (Installation, Storage, Netzwerk, 
 
 ***
 
-## 8.6 Typische Probleme & Troubleshooting
+## 6.6 Typische Probleme & Troubleshooting
 
 1. **Quorum-Verlust**
 
@@ -1357,13 +1815,13 @@ Während in den bisherigen Kapiteln die Basis (Installation, Storage, Netzwerk, 
 
 ***
 
-# **Kapitel 9 – Backup und Wiederherstellung**
+# **Kapitel 7 – Backup und Wiederherstellung**
 
 Kommen wir zu einem der wichtigsten Themen: Datensicherheit. Eine Virtualisierungsplattform ohne **vernünftige Backup-Strategie** ist ein massiver Risikofaktor. Proxmox VE bietet eingebaute Tools wie VZDump, um VMs/Container zu sichern, zudem lassen sich externe Backup-Server (PBS, NFS, CIFS, etc.) nutzen.
 
-## 9.1 VZDump – Proxmox Standard-Backup
+## 7.1 VZDump – Proxmox Standard-Backup
 
-### 9.1.1 Backup-Typen
+### 7.1.1 Backup-Typen
 
 1. **Snapshot-Mode**:
    * VM/Container wird kurz gesnapshottet, der dump erfolgt vom Snapshot. Minimale Downtime. Funktioniert gut auf LVM-Thin oder ZFS.
@@ -1372,13 +1830,13 @@ Kommen wir zu einem der wichtigsten Themen: Datensicherheit. Eine Virtualisierun
 3. **Stop**:
    * VM erst herunterfahren, Backup erstellen, dann wieder starten. Längste Downtime, aber am sichersten was Datenkonsistenz angeht (bes. bei Datenbanken).
 
-### 9.1.2 Backup-Speicher hinzufügen
+### 7.1.2 Backup-Speicher hinzufügen
 
 * _Datacenter → Storage → Add → (Directory/NFS/CIFS/etc.)_.
 * `Content: VZDump backup file`.
 * Ggf. Offsite: z.B. NFS-Share eines externen NAS oder Cloud-Lösungen (rclone + lokal gemountet).
 
-### 9.1.3 Backup-Jobs
+### 7.1.3 Backup-Jobs
 
 * _Datacenter → Backup → Add_.
 
@@ -1389,7 +1847,7 @@ Kommen wir zu einem der wichtigsten Themen: Datensicherheit. Eine Virtualisierun
   * Compression: LZO, GZIP, ZSTD.
   * Max backups: Alte Backups automatisch löschen.
 
-### 9.1.4 Wiederherstellung
+### 7.1.4 Wiederherstellung
 
 * _Datacenter → Storage → Content_: Wählen Sie die Backup-Datei (VMID, Datum) → _Restore_.
 * Neuen VMID vergeben oder existierende VM überschreiben.
@@ -1397,7 +1855,7 @@ Kommen wir zu einem der wichtigsten Themen: Datensicherheit. Eine Virtualisierun
 
 ***
 
-## 9.2 Offsite-Backup, Disaster Recovery
+## 7.2 Offsite-Backup, Disaster Recovery
 
 1. **Proxmox Backup Server (PBS)**:
 
@@ -1420,32 +1878,32 @@ Kommen wir zu einem der wichtigsten Themen: Datensicherheit. Eine Virtualisierun
 
 ***
 
-## 9.3 Prüfung der Backups
+## 7.3 Prüfung der Backups
 
 * Nur ein **richtig getestetes** Backup ist wertvoll. Führen Sie z.B. monatlich eine Testwiederherstellung (stichprobenartig) durch, um sicherzugehen, dass die Dumpfiles intakt sind.
 * Prüfen Sie Speicherauslastung: Werden alte Backups korrekt gelöscht?
 
 ***
 
-# **Kapitel 10 – Monitoring und Wartung**
+# **Kapitel 8 – Monitoring und Wartung**
 
 Kein System bleibt stabil ohne **Monitoring** und **regelmäßige Wartung**. Proxmox VE bietet eigene Grundübersichten zu CPU/RAM/Netz, aber umfangreichere Tools (Prometheus, Grafana, Zabbix, Nagios) lassen tiefere Einblicke zu.
 
-## 10.1 Monitoring
+## 8.1 Monitoring
 
-### 10.1.1 Prometheus & Grafana
+### 8.1.1 Prometheus & Grafana
 
 * **Prometheus**: Zeitreihen-Datenbank. Mithilfe eines Proxmox-Exporters oder Node-Exporter sammelt man Metriken (CPU, RAM, Platten-IO, Netz).
 * **Grafana**: Visualisierung auf Dashboards. Zeigt z.B. Clusterübersicht, Auslastung pro Node, Container, VM.
 * **Alarme**: Ab einer bestimmten CPU-Auslastung oder bei Plattenfehlern kann Grafana Alerts per Mail/Slack schicken.
 
-### 10.1.2 Zabbix
+### 8.1.2 Zabbix
 
 * Eigenes Monitoring-System mit Agenten/Agentless-Optionen.
 * Zabbix-Template für Proxmox existiert in der Community.
 * Vorteil: Integriertes Eskalations- und Event-Handling, bewährt in größeren Umgebungen.
 
-### 10.1.3 Log-Management
+### 8.1.3 Log-Management
 
 * **ELK-Stack** (Elasticsearch, Logstash, Kibana) oder **Graylog**:
 
@@ -1454,7 +1912,7 @@ Kein System bleibt stabil ohne **Monitoring** und **regelmäßige Wartung**. Pro
 
 ***
 
-## 10.2 Wartungsschritte
+## 8.2 Wartungsschritte
 
 1. **Updates**
 
@@ -1482,17 +1940,17 @@ Kein System bleibt stabil ohne **Monitoring** und **regelmäßige Wartung**. Pro
 
 ***
 
-# **Kapitel 11 – Automatisierung**
+# **Kapitel 9 – Automatisierung**
 
 In Test- und Produktionsumgebungen mit vielen VMs lohnt es sich, repetitive Tasks zu **automatisieren**.
 
-## 11.1 Cron-Jobs und Scripts
+## 9.1 Cron-Jobs und Scripts
 
 1. **Backup-Skripte**: Selbstdefinierte VZDumps, rsync oder rclone, die man per Cron anstößt.
 2. **ZFS-Scrub**: `zpool scrub <pool>` wöchentlich.
 3. **Logrotation**: Debian standard, aber man kann z.B. Syslog via Cron an externe Tools pipen.
 
-## 11.2 Ansible
+## 9.2 Ansible
 
 * **Agentenlos**: Man spricht per SSH die Proxmox-Hosts an.
 
@@ -1503,7 +1961,7 @@ In Test- und Produktionsumgebungen mit vielen VMs lohnt es sich, repetitive Task
   * VMs anlegen, löschen, Snapshot & Backup, Cluster-Updates.
   * Im großen Stil identische Umgebungen deployen.
 
-## 11.3 Hooks und die Proxmox REST API
+## 9.3 Hooks und die Proxmox REST API
 
 * **Hooks**: Per VMID-hookscript kann man Shell-Skripte triggern, wenn eine VM startet/stoppt/migriert. Praktisch für benutzerdefinierte Meldungen oder Post-Provisioning.
 * **REST API**: Mit Tools wie `pvesh` (lokal) oder HTTP(S) + Token Authentication kann man sämtliche Proxmox-Kommandos programmatisch ausführen.
@@ -1511,7 +1969,7 @@ In Test- und Produktionsumgebungen mit vielen VMs lohnt es sich, repetitive Task
 
 ***
 
-# **Kapitel 12 – Fazit**
+# **Kapitel 10 – Fazit**
 
 Mit diesem letzten, umfangreichen Teil haben wir das Fundament für eine **komplette** Proxmox VE Test- oder auch Produktionsumgebung gelegt:
 
@@ -1521,14 +1979,14 @@ Mit diesem letzten, umfangreichen Teil haben wir das Fundament für eine **kompl
 4. **Automatisierung**: Durch Ansible, Hooks oder die REST API wird das Verwalten Dutzender VMs und Container zum Kinderspiel.
 5. **Sicherheit**: **SSH-Härtung**, 2FA, CrowdSec, RBAC und Keycloak-SSO mindern die Angriffsfläche erheblich und schützen Ihre Virtualisierungslandschaft vor unberechtigten Zugriffen.
 
-## 12.1 Abschließende Tipps
+## 10.1 Abschließende Tipps
 
 * **Klein anfangen**: Zuerst 1–2 Nodes, ZFS oder EXT4, VLANs, schrittweise mehr.
 * **Dokumentation pflegen**: Jede Änderung (neue VLAN IDs, Firewall-Regeln) sauber notieren, sonst verliert man bei Störungen den Überblick.
 * **Testen, testen, testen**: Ob HA-Failover, Snapshots, Backup-Restore – probieren Sie alles in einer ruhigen Minute aus.
 * **Community & Support**: Die Proxmox-Community ist sehr aktiv. Bei tieferen Problemen mit QDevices, HA oder Keycloak-SSO lohnt sich ggf. auch ein **Enterprise-Support-Vertrag**.
 
-## 12.2 Weiterführende Ressourcen
+## 10.2 Weiterführende Ressourcen
 
 1. **Offizielle Proxmox-Doku**: <https://pve.proxmox.com/pve-docs/>
 2. **Proxmox Backup Server**: <https://pbs.proxmox.com/docs/>
