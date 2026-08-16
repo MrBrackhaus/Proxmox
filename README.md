@@ -1,6 +1,6 @@
 # Proxmox VE Testumgebung
 
-![Proxmox Header](https://github.com/user-attachments/assets/60b4f297-990a-4ad7-b66c-bb25f89a7373)
+
 
 Ein Leitfaden zur Einrichtung und Verwaltung einer sicheren Proxmox VE Testumgebung. 
 
